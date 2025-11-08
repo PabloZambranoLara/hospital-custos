@@ -54,13 +54,13 @@ public class HospitalCustosApplication {
 
                     // Classificação de acordo com o valor
                     if (gasto.getValor() > 10000) {
-                        System.out.println("⚠ Aprovado pela DIRETORIA.");
+                        System.out.println("Aprovado pela DIRETORIA.");
                         gastosDiretoria.add(gasto);
                     } else if (gasto.getValor() >= 5000) {
-                        System.out.println("🟠 Aprovado pelo GERENTE FINANCEIRO.");
+                        System.out.println("Aprovado pelo GERENTE FINANCEIRO.");
                         gastosFinanceiro.add(gasto);
                     } else {
-                        System.out.println("🟢 Gasto pequeno, aprovado automaticamente.");
+                        System.out.println("Gasto pequeno, aprovado automaticamente.");
                         gastosAutomaticos.add(gasto);
                     }
                     break;
