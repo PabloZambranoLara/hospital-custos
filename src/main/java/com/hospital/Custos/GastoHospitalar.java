@@ -1,44 +1,69 @@
 package com.hospital.Custos;
 
-public class GastoHospitalar {
+import java.util.Objects;
 
-    private int id;
+public class GastoHospitalar extends Entidade implements Persistable {
+
     private String descricao;
     private CategoriaGasto categoria;
     private double valor;
     private boolean necessitaAprovacao;
 
+
+    public static final double FATOR_IMPOSTO_INTERNACAO = 1.05;
+    public static final double FATOR_IMPOSTO_MATERIAL   = 1.02;
+    public static final double FATOR_IMPOSTO_PROCESSO   = 1.03;
+    public static final double FATOR_IMPOSTO_SERVICO    = 1.04;
+
     public GastoHospitalar() {}
 
-    public GastoHospitalar(int id, String descricao, CategoriaGasto categoria, double valor, boolean necessitaAprovacao){
-        this.id = id;
-        this.descricao = descricao;
-        this.categoria = categoria;
-        this.valor = valor;
+    public GastoHospitalar(int id, String descricao, CategoriaGasto categoria, double valor, boolean necessitaAprovacao) {
+        super(id);
+        setDescricao(descricao);
+        setCategoria(categoria);
+        setValor(valor);
         this.necessitaAprovacao = necessitaAprovacao;
     }
 
-    // Processa o gasto aplicando o imposto
     public void processarGasto() {
         System.out.println("\nProcessando gasto hospitalar...");
+
+        if (valor > 500 && categoria == CategoriaGasto.MATERIAL) {
+            System.out.println("Verificação extra aplicada: MATERIAL acima de R$ 500.");
+        }
+
+        if (valor < 50 || !necessitaAprovacao) {
+            System.out.println("ℹ Gasto pequeno ou que não requer aprovação.");
+        }
+
         System.out.println("Valor original: R$ " + valor);
         System.out.println("Valor com imposto aplicado: R$ " + calcularImposto());
     }
 
-    private double calcularImposto() {
+    public double calcularImposto() {
         if (categoria == null) return valor;
+
         return switch (categoria) {
-            case INTERNACAO -> valor * 1.05;
-            case MATERIAL -> valor * 1.02;
-            case PROCESSO -> valor * 1.03;
-            case SERVICO -> valor * 1.04;
+            case INTERNACAO -> valor * FATOR_IMPOSTO_INTERNACAO;
+            case MATERIAL   -> valor * FATOR_IMPOSTO_MATERIAL;
+            case PROCESSO   -> valor * FATOR_IMPOSTO_PROCESSO;
+            case SERVICO    -> valor * FATOR_IMPOSTO_SERVICO;
         };
     }
 
-    // Resumo detalhado do gasto
     public void resumoGastos() {
         System.out.println("\nResumo do gasto hospitalar:");
-        System.out.println("ID: " + id);
+        System.out.println(this);
+    }
+
+
+    public void resumoGastos(boolean detalhado) {
+        if (!detalhado) {
+            resumoGastos();
+            return;
+        }
+        System.out.println("\nResumo detalhado do gasto:");
+        System.out.println("ID: " + getId());
         System.out.println("Descrição: " + descricao);
         System.out.println("Categoria: " + categoria);
         System.out.println("Valor: R$ " + valor);
@@ -46,19 +71,63 @@ public class GastoHospitalar {
         System.out.println("Valor com imposto: R$ " + calcularImposto());
     }
 
-    // Getters e Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    @Override
+    public String toString() {
+        return "ID=" + getId() +
+                " | Descrição='" + descricao + '\'' +
+                " | Categoria=" + categoria +
+                " | Valor=R$ " + valor +
+                " | Aprovacao=" + (necessitaAprovacao ? "Sim" : "Não");
+    }
 
     public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public void setDescricao(String descricao) {
+        if (descricao == null || descricao.trim().isEmpty()) {
+            throw new ValorInvalidoException("Descrição não pode ser vazia.");
+        }
+        this.descricao = descricao.trim();
+    }
 
     public CategoriaGasto getCategoria() { return categoria; }
     public void setCategoria(CategoriaGasto categoria) { this.categoria = categoria; }
 
     public double getValor() { return valor; }
-    public void setValor(double valor) { this.valor = valor; }
+    public void setValor(double valor) {
+        if (valor < 0) throw new ValorInvalidoException("Valor do gasto não pode ser negativo: " + valor);
+        this.valor = valor;
+    }
 
     public boolean isNecessitaAprovacao() { return necessitaAprovacao; }
     public void setNecessitaAprovacao(boolean necessitaAprovacao) { this.necessitaAprovacao = necessitaAprovacao; }
+
+    @Override
+    public String toRecord() {
+        // Escape simples: substitui ; na descrição por , para não quebrar o parsing
+        String safeDescricao = descricao == null ? "" : descricao.replace(";", ",");
+        return String.format("%d;%s;%s;%.2f;%b",
+                getId(),
+                safeDescricao,
+                categoria == null ? "" : categoria.name(),
+                valor,
+                necessitaAprovacao);
+    }
+
+    public static GastoHospitalar fromRecord(String recordLine) {
+        // Formato esperado: id;descricao;categoria;valor;necessitaAprovacao
+        if (recordLine == null || recordLine.trim().isEmpty()) return null;
+        String[] parts = recordLine.split(";", -1);
+        if (parts.length < 5) return null;
+
+        try {
+            int id = Integer.parseInt(parts[0].trim());
+            String descricao = parts[1].trim();
+            CategoriaGasto categoria = parts[2].trim().isEmpty() ? null : CategoriaGasto.valueOf(parts[2].trim());
+            double valor = Double.parseDouble(parts[3].trim().replace(",", "."));
+            boolean necessita = Boolean.parseBoolean(parts[4].trim());
+
+            return new GastoHospitalar(id, descricao, categoria, valor, necessita);
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

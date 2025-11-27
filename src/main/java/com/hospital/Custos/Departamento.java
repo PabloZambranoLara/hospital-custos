@@ -9,7 +9,7 @@ public class Departamento {
     private List<GastoHospitalar> gastos;
 
     public Departamento() {
-        this.gastos = new ArrayList<>();
+        this("Sem Nome"); // chamando o outro construtor
     }
 
     public Departamento(String nome) {
@@ -22,19 +22,32 @@ public class Departamento {
     }
 
     public double totalGastos() {
-        return gastos.stream().mapToDouble(GastoHospitalar::getValor).sum();
+        return gastos.stream()
+                .mapToDouble(GastoHospitalar::getValor)
+                .sum();
+    }
+
+    public double totalGastos(boolean incluirImpostos) {
+        if (!incluirImpostos) {
+            return totalGastos();
+        }
+
+        double total = 0;
+        for (GastoHospitalar g : gastos) {
+            total += g.calcularImposto();
+        }
+
+        return total;
     }
 
     @Override
     public String toString() {
-        return "Departamento: " + nome +
-                "\nTotal de Gastos: R$ " + totalGastos() +
-                "\nQuantidade de Gastos: " + gastos.size() + "\n";
+        return "\nDepartamento: " + nome +
+                "\nGastos registrados: " + gastos.size() +
+                "\nTotal sem impostos: R$ " + totalGastos() +
+                "\nTotal com impostos: R$ " + totalGastos(true);
     }
 
-    // Getters e Setters
     public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-
     public List<GastoHospitalar> getGastos() { return gastos; }
 }

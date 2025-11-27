@@ -6,4 +6,3 @@ public enum CategoriaGasto {
     PROCESSO,
     SERVICO
 }
-
