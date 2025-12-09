@@ -102,7 +102,6 @@ public class GastoHospitalar extends Entidade implements Persistable {
 
     @Override
     public String toRecord() {
-        // Escape simples: substitui ; na descrição por , para não quebrar o parsing
         String safeDescricao = descricao == null ? "" : descricao.replace(";", ",");
         return String.format("%d;%s;%s;%.2f;%b",
                 getId(),
@@ -113,7 +112,7 @@ public class GastoHospitalar extends Entidade implements Persistable {
     }
 
     public static GastoHospitalar fromRecord(String recordLine) {
-        // Formato esperado: id;descricao;categoria;valor;necessitaAprovacao
+
         if (recordLine == null || recordLine.trim().isEmpty()) return null;
         String[] parts = recordLine.split(";", -1);
         if (parts.length < 5) return null;

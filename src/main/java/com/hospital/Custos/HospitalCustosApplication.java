@@ -83,7 +83,6 @@ public class HospitalCustosApplication {
 
                         boolean necessita = resposta.equals("s");
 
-                        // Cria gasto usando o construtor correto
                         GastoHospitalar gasto = new GastoHospitalar(id, descricao, categoria, valor, necessita);
 
                         // Processa e exibe resumo
@@ -149,7 +148,5 @@ public class HospitalCustosApplication {
             }
 
         } while (true);
-        // (não chegamos aqui por causa do loop infinito com break; se preferir, ajuste para sair com opcao==0)
-        // scanner.close();
     }
 }
